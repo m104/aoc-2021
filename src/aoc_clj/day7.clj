@@ -20,11 +20,28 @@
         midpoint (/ (count sorted) 2)]
     (nth sorted midpoint)))
 
+(defn fuel-cost
+  [coll target]
+  (reduce
+   (fn [sum pos]
+     (let [fuel (apply - (reverse (sort [target pos])))]
+       (println "pos:" pos "fuel:" fuel)
+       (+ sum
+          fuel)))
+   0
+   coll))
+
+(defn min-fuel-cost
+  [coll]
+  (let [target (median coll)]
+    (println "target:" target)
+    (fuel-cost coll target)))
+
 (defn part1
   [lines]
   (-> lines
       parse-input
-      median))
+      min-fuel-cost))
 
 (println "Part 1 test answer:")
 (println (part1 test-lines))
