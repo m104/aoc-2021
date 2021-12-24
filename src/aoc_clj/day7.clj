@@ -49,11 +49,53 @@
 (println "Part 1 answer:")
 (println (part1 input-lines))
 
-; TODO
+(defn gauss-sum
+  [n]
+  (/ (* n (inc n))
+     2))
+
+(defn fuel-cost2
+  [positions target]
+  (reduce
+   (fn [sum position]
+     (let [delta (apply - (reverse (sort [position target])))
+           fuel (gauss-sum delta)]
+       (+ sum fuel)))
+   0
+   positions))
+
+(defn min-fuel-cost2
+  [positions]
+  (reduce
+   (fn [prev position]
+     (let [cost (fuel-cost2 positions position)]
+       (println "position:" position "cost:" cost)
+       (min prev cost)))
+   (Integer/MAX_VALUE)
+   (range (apply max positions))))
+
+(defn min-fuel-cost3
+  [positions]
+  (loop [left 0
+         right (dec (apply max positions))
+         left-value (fuel-cost2 positions left)
+         right-value (fuel-cost2 positions right)]
+    (println "left:" left "right:" right "lvalue:" left-value "rvalue:" right-value)
+    (if (<= (- right left)
+            1)
+      (min left-value right-value)
+      (let [pivot (int (Math/floor (+ left (/ (- right left) 2))))
+            pivot-value (fuel-cost2 positions pivot)]
+
+        (if (<= left-value right-value)
+          (recur left pivot left-value pivot-value)
+          (recur pivot right pivot-value right-value))))))
+
 (defn part2
   [lines]
   (-> lines
-      parse-input))
+      parse-input
+      min-fuel-cost3))
 
 (println "Part 2 test answer:")
 (println (part2 test-lines))
