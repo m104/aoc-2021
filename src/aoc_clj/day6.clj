@@ -29,15 +29,16 @@
   (assoc initial-state :fish-ages (group-fish-by-age fish)))
 
 ;; [0 1 2 3 4 5 6 7 8]
-;; 0: consume,
-;; 1 - 8
+;; 0: store
+;; 1 - 8: shift left
+;; lastly, add the 0 values to 6 and 8
 
 (defn right-padv
   [v size init]
   (if (>= (count v) size)
     v
     (let [remaining (- size (count v))
-          fill (mapv (fn [_] 0) (range remaining))]
+          fill (mapv (constantly init) (range remaining))]
       (into [] (concat v fill)))))
 
 (defn simulate-day
@@ -76,48 +77,12 @@
 (println "Part 1 answer:")
 (println (part1 input-lines 80))
 
-(defn group-fish
-  [{:keys [day fish]}]
-  {:day day
-   :fish-groups (frequencies fish)})
-
-(defn simulate-day-faster
-  [{:keys [day fish-groups]}]
-  ;(println "Simulating day" (inc day) fish-groups)
-  {:day (inc day)
-   :fish-groups
-   (letfn [(add [increment] #(apply + (filter number? [increment %])))]
-     (reduce-kv
-      (fn [new-groups age count]
-        (cond
-          (= 0 age) (-> new-groups
-                        (update (inc repro-time) (add count))
-                        (update (dec repro-time) (add count)))
-          :else (update new-groups (dec age) (add count))))
-      {} fish-groups))})
-
-(defn simulate-days
-  [state days]
-  ;(println "Simulating..." days state)
-  (last (take (inc days) (iterate simulate-day-faster state))))
-
-(defn grouped-fish-answer
-  [{:keys [fish-groups]}]
-  ;(println "Summing up" fish-groups)
-  {:answer (->> fish-groups
-                vals
-                (reduce +))})
-
 (defn part2
   [lines days]
-  (-> lines
-      parse-input
-      group-fish
-      (simulate-days days)
-      grouped-fish-answer))
+  (part1 lines days))
 
 (println "Part 2 test answer:")
-;(println (part2 test-lines 18))
+(println (part2 test-lines 18))
 
 (println "Part 2 answer:")
-;(println (part2 input-lines 256))
+(println (part2 input-lines 256))
