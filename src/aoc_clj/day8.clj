@@ -1,5 +1,6 @@
 (ns aoc-clj.day8
-  (:require [aoc-clj.core :refer [load-lines str->int]]
+  (:require [aoc-clj.core :refer [load-lines str->int combinations
+                                  invert-map invert-map-of-sets]]
             [clojure.string :refer [split split-lines trim]]
             [clojure.set :refer [union]]))
 
@@ -20,7 +21,8 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 
 (defn parse-signals
   [s]
-  (mapv #(into #{} (split % #""))
+  (mapv #(into #{}
+               (map keyword (split % #"")))
         (split s #" ")))
 
 (defn parse-input
@@ -33,7 +35,10 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
         :outputs outputs}))
    lines))
 
-(def digit-connections
+(def all-connections [:a :b :c :d :e :f :g])
+(def all-digits (range 10))
+
+(def connections-by-digit
   {0 #{:a :b :c :e :f :g}
    1 #{:c :f}
    2 #{:a :c :d :e :g}
@@ -45,47 +50,112 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
    8 #{:a :b :c :d :e :f :g}
    9 #{:a :b :c :d :f :g}})
 
+(def digit-by-connections
+  (invert-map connections-by-digit))
+
+(def digits-by-connection
+  (invert-map-of-sets connections-by-digit))
+
 (def digits-by-connection-count
   (reduce-kv
-   (fn [coll digit connections]
-     (println "digit:" digit "connections:" connections)
-     (update coll
-             (count connections)
-             (fn [current]
-               (union (or current #{})
-                      #{digit}))))
+   (fn [m digit connections]
+     (update m (count connections) #(conj (or % #{}) digit)))
    {}
-   digit-connections))
+   connections-by-digit))
 
 (defn count-unique-output-digits
   [outputs]
-  (count (filter #(= 1 (count
-                        (get digits-by-connection-count
-                             (count %))))
-                 outputs)))
+  (count
+   (filter
+    #(= 1 (count
+           (get digits-by-connection-count
+                (count %))))
+    outputs)))
+
+(defn known-digit?
+  [connection-count]
+  (= 1 (count
+        (get digits-by-connection-count connection-count))))
 
 (defn part1
   [lines]
   (->> lines
        parse-input
-       (map :outputs)
-       (map count-unique-output-digits)
-       (reduce +)))
+       (into [] (comp
+                 (map :outputs)
+                 cat
+                 (map count)
+                 (filter known-digit?)))
+       count))
 
 (println "Part 1 test answer:")
-(println (part1 test-lines))
+;(println (part1 test-lines))
 
 (println "Part 1 answer:")
-(println (part1 input-lines))
+;(println (part1 input-lines))
 
-; TODO
+; for each connection mapping
+;  create signal map
+;  map input outputs to connections
+;  map connection sets to digits
+;  (and (every? digits)
+;        (= (count all-digits) (count digits)))
+
+(defn connection-mappings
+  [connections]
+  (for [combo (combinations (set connections))]
+    (zipmap combo connections)))
+
+(defn outputs->digit
+  [outputs mapping]
+  (let [mapped (map #(get mapping %) outputs)
+        connections (into #{} mapped)]
+    (get digit-by-connections connections)))
+
+(defn full-digit-set?
+  [digits]
+  (let [given-digits (set digits)]
+    (= given-digits (set all-digits))))
+
+(defn full-connection-mapping
+  [patterns]
+  (some
+   (fn [mapping]
+     (let [digit-set
+           (reduce
+            (fn [s outputs]
+              (let [digit (outputs->digit outputs mapping)]
+                (if digit (conj s digit) s)))
+            #{}
+            patterns)]
+       (when (full-digit-set? digit-set)
+         mapping)))
+   (connection-mappings all-connections)))
+
+(defn digits->number
+  [digits]
+  (reduce (fn [n d] (+ d (* 10 n))) 0 digits))
+
+(defn process-digits
+  [{:keys [patterns outputs]}]
+  (let [mapping (full-connection-mapping patterns)
+        digits (map #(outputs->digit % mapping) outputs)]
+    {:digits digits
+     :number (digits->number digits)
+     :mapping mapping}))
+
 (defn part2
   [lines]
-  (-> lines
-      parse-input))
+  (reduce + 0
+          (->> lines
+               parse-input
+               (map process-digits)
+               (map :number))))
 
 (println "Part 2 test answer:")
-(println (part2 test-lines))
+;(println (part2 test-lines))
+; 61229
 
 (println "Part 2 answer:")
-(println (part2 input-lines))
+;(println (part2 input-lines))
+; 1012089
