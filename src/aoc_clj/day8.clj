@@ -94,13 +94,6 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 (println "Part 1 answer:")
 ;(println (part1 input-lines))
 
-; for each connection mapping
-;  create signal map
-;  map input outputs to connections
-;  map connection sets to digits
-;  (and (every? digits)
-;        (= (count all-digits) (count digits)))
-
 (defn connection-mappings
   [connections]
   (for [combo (combinations (set connections))]
@@ -154,8 +147,6 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 
 (println "Part 2 test answer:")
 ;(println (part2 test-lines))
-; 61229
 
 (println "Part 2 answer:")
 ;(println (part2 input-lines))
-; 1012089
