@@ -73,11 +73,11 @@
      :low-points low-points}))
 
 (println "Part 1 test answer:")
-(println (part1 test-lines))
+;(println (part1 test-lines))
 ; 15
 
 (println "Part 1 answer:")
-(println (part1 input-lines))
+;(println (part1 input-lines))
 ; 498
 
 (defn part2
